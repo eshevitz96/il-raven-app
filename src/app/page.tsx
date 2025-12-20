@@ -99,6 +99,23 @@ export default function Home() {
         src={currentTrack?.path}
         onEnded={handleTrackEnd}
         className="hidden"
+        preload="auto"
+      />
+
+      {/* Hidden preloader for gapless transitions */}
+      <audio
+        ref={(el) => {
+          if (el && currentTrack && albumPlaylist.length > 0) {
+            const currentIndex = albumPlaylist.findIndex(t => t.path === currentTrack.path);
+            if (currentIndex !== -1 && currentIndex < albumPlaylist.length - 1) {
+              el.src = albumPlaylist[currentIndex + 1].path;
+              el.load(); // Force buffer
+            }
+          }
+        }}
+        preload="auto"
+        className="hidden"
+        muted
       />
 
       {/* Fixed Layout Elements - "The Album Cover Frame" */}
