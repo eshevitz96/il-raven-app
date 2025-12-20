@@ -115,16 +115,16 @@ export default function Home() {
       />
 
       {/* Fixed Layout Elements - "The Album Cover Frame" */}
-      <div className="fixed top-8 left-8 md:top-12 md:left-12 z-50 mix-blend-difference text-white pointer-events-none">
+      <div className="fixed top-8 left-8 md:top-12 md:left-12 z-50 mix-blend-difference text-white pointer-events-none font-['Helvetica']">
         <h1 className="text-sm md:text-base font-black tracking-widest">COMMON INTELLECTUAL</h1>
       </div>
-      <div className="fixed top-8 right-8 md:top-12 md:right-12 z-50 text-right mix-blend-difference text-white pointer-events-none">
+      <div className="fixed top-8 right-8 md:top-12 md:right-12 z-50 text-right mix-blend-difference text-white pointer-events-none font-['Helvetica']">
         <h2 className="text-sm md:text-base font-black tracking-widest">CREATORS</h2>
       </div>
-      <div className="fixed bottom-8 left-8 md:bottom-12 md:left-12 z-50 mix-blend-difference text-white pointer-events-none">
+      <div className="fixed bottom-8 left-8 md:bottom-12 md:left-12 z-50 mix-blend-difference text-white pointer-events-none font-['Helvetica']">
         <h3 className="text-sm md:text-base font-black tracking-widest">PRESENTS</h3>
       </div>
-      <div className="fixed bottom-8 right-8 md:bottom-12 md:right-12 z-50 text-right mix-blend-difference text-white pointer-events-none">
+      <div className="fixed bottom-8 right-8 md:bottom-12 md:right-12 z-50 text-right mix-blend-difference text-white pointer-events-none font-['Helvetica']">
         <h3 className="text-sm md:text-base font-black tracking-widest">ILL RAVEN AUDIO</h3>
       </div>
 
