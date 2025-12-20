@@ -1,0 +1,158 @@
+{
+  "genesis": [
+    {
+      "name": "CHOIR OF THE NIGHT_PRHODES.m4a",
+      "path": "/audio/genesis/CHOIR%20OF%20THE%20NIGHT_PRHODES.m4a"
+    },
+    {
+      "name": "ELECGTR_PRHODES_ROUGH.m4a",
+      "path": "/audio/genesis/ELECGTR_PRHODES_ROUGH.m4a"
+    },
+    {
+      "name": "L.I.F_PHRODES_ROUGH 1-16.m4a",
+      "path": "/audio/genesis/L.I.F_PHRODES_ROUGH%201-16.m4a"
+    },
+    {
+      "name": "metalhead.m4a",
+      "path": "/audio/genesis/metalhead.m4a"
+    },
+    {
+      "name": "My Will To Live - rough draft.m4a",
+      "path": "/audio/genesis/My%20Will%20To%20Live%20-%20rough%20draft.m4a"
+    },
+    {
+      "name": "ROLL THE DICE (bounce)_1.m4a",
+      "path": "/audio/genesis/ROLL%20THE%20DICE%20(bounce)_1.m4a"
+    }
+  ],
+  "broll": [
+    {
+      "name": "03.Falling (bounce 2.1).m4a",
+      "path": "/audio/b-roll/03.Falling%20(bounce%202.1).m4a"
+    },
+    {
+      "name": "Album of The Year Remix.wav",
+      "path": "/audio/b-roll/Album%20of%20The%20Year%20Remix.wav"
+    },
+    {
+      "name": "ALCHEMICAL BOOMBAP_PRHODES.m4a",
+      "path": "/audio/b-roll/ALCHEMICAL%20BOOMBAP_PRHODES.m4a"
+    },
+    {
+      "name": "Avicci 2.wav",
+      "path": "/audio/b-roll/Avicci%202.wav"
+    },
+    {
+      "name": "baby yoda3 137.m4a",
+      "path": "/audio/b-roll/baby%20yoda3%20137.m4a"
+    },
+    {
+      "name": "Baloncesto.wav",
+      "path": "/audio/b-roll/Baloncesto.wav"
+    },
+    {
+      "name": "BATMAN_PRHODES_ROUGH.m4a",
+      "path": "/audio/b-roll/BATMAN_PRHODES_ROUGH.m4a"
+    },
+    {
+      "name": "coffee shop b roll.m4a",
+      "path": "/audio/b-roll/coffee%20shop%20b%20roll.m4a"
+    },
+    {
+      "name": "Edge Of the World.wav",
+      "path": "/audio/b-roll/Edge%20Of%20the%20World.wav"
+    },
+    {
+      "name": "gravel.m4a",
+      "path": "/audio/b-roll/gravel.m4a"
+    },
+    {
+      "name": "Logic Series - Trap Star.wav",
+      "path": "/audio/b-roll/Logic%20Series%20-%20Trap%20Star.wav"
+    },
+    {
+      "name": "Love Is A Drug.wav",
+      "path": "/audio/b-roll/Love%20Is%20A%20Drug.wav"
+    },
+    {
+      "name": "lvlsV1.mp3",
+      "path": "/audio/b-roll/lvlsV1.mp3"
+    },
+    {
+      "name": "OVERLOAD_PRHODES.m4a",
+      "path": "/audio/b-roll/OVERLOAD_PRHODES.m4a"
+    },
+    {
+      "name": "seeing omens Rd prod clockwork.mp3",
+      "path": "/audio/b-roll/seeing%20omens%20Rd%20prod%20clockwork.mp3"
+    },
+    {
+      "name": "WHATS UP? .m4a",
+      "path": "/audio/b-roll/WHATS%20UP%3F%20.m4a"
+    }
+  ],
+  "sideA": [
+    {
+      "name": "1 planned and solved prod clckwork.mp3",
+      "path": "/audio/final/side-a/1%20planned%20and%20solved%20prod%20clckwork.mp3"
+    },
+    {
+      "name": "2 Close My Eyes - Cm 85.wav",
+      "path": "/audio/final/side-a/2%20Close%20My%20Eyes%20-%20Cm%2085.wav"
+    },
+    {
+      "name": "3 kickin.wav",
+      "path": "/audio/final/side-a/3%20kickin.wav"
+    },
+    {
+      "name": "4 Kota .wav",
+      "path": "/audio/final/side-a/4%20Kota%20.wav"
+    },
+    {
+      "name": "5 romance_rough.m4a",
+      "path": "/audio/final/side-a/5%20romance_rough.m4a"
+    },
+    {
+      "name": "7 MIDNIGHT.wav",
+      "path": "/audio/final/side-a/7%20MIDNIGHT.wav"
+    },
+    {
+      "name": "8 Your Love.wav",
+      "path": "/audio/final/side-a/8%20Your%20Love.wav"
+    }
+  ],
+  "sideB": [
+    {
+      "name": "1 Bella.wav",
+      "path": "/audio/final/side-b/1%20Bella.wav"
+    },
+    {
+      "name": "2 BETTER NOW_PRHODES.m4a",
+      "path": "/audio/final/side-b/2%20BETTER%20NOW_PRHODES.m4a"
+    },
+    {
+      "name": "3 Blessings.wav",
+      "path": "/audio/final/side-b/3%20Blessings.wav"
+    },
+    {
+      "name": "4 The Product of Pain.wav",
+      "path": "/audio/final/side-b/4%20The%20Product%20of%20Pain.wav"
+    },
+    {
+      "name": "5 FEEL GOOD g#min 124.wav",
+      "path": "/audio/final/side-b/5%20FEEL%20GOOD%20g%23min%20124.wav"
+    },
+    {
+      "name": "6 FREE.wav",
+      "path": "/audio/final/side-b/6%20FREE.wav"
+    },
+    {
+      "name": "7 ION.wav",
+      "path": "/audio/final/side-b/7%20ION.wav"
+    },
+    {
+      "name": "8 Odyessey.wav",
+      "path": "/audio/final/side-b/8%20Odyessey.wav"
+    }
+  ]
+}

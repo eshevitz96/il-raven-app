@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 
+import audioManifest from '../data/audio-manifest.json';
+
 interface AudioTrack {
   name: string;
   path: string;
@@ -19,22 +21,16 @@ interface AudioData {
 
 export default function Home() {
   const [phase, setPhase] = useState<'signal' | 'archive' | 'sanctuary'>('signal');
-  const [data, setData] = useState<AudioData | null>(null);
+  const [data, setData] = useState<AudioData>(audioManifest);
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Flatten Side A and Side B for continuous playback
   const albumPlaylist = useMemo(() => {
-    if (!data) return [];
     return [...data.sideA, ...data.sideB];
   }, [data]);
 
-  useEffect(() => {
-    fetch('/api/audio')
-      .then((res) => res.json())
-      .then(setData);
-  }, []);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -284,7 +280,7 @@ export default function Home() {
                       onClick={() => playTrack(track)}
                       className={`w-full text-left py-4 px-2 border-t-2 border-black flex justify-between items-center hover:bg-black hover:text-white transition-colors group ${currentTrack?.path === track.path ? 'bg-black text-white' : ''}`}
                     >
-                      <span className="font-bold uppercase text-lg">{(i + 1).toString().padStart(2, '0')}. {track.name.replace(/\.[^/.]+$/, "")}</span>
+                      <span className="font-bold uppercase text-lg">{track.name.replace(/\.[^/.]+$/, "")}</span>
                       <span className="opacity-0 group-hover:opacity-100 transition-opacity">PLAY</span>
                     </button>
                   ))}
@@ -300,7 +296,7 @@ export default function Home() {
                       onClick={() => playTrack(track)}
                       className={`w-full text-left py-4 px-2 border-t-2 border-black flex justify-between items-center hover:bg-black hover:text-white transition-colors group ${currentTrack?.path === track.path ? 'bg-black text-white' : ''}`}
                     >
-                      <span className="font-bold uppercase text-lg">{(i + 1).toString().padStart(2, '0')}. {track.name.replace(/\.[^/.]+$/, "")}</span>
+                      <span className="font-bold uppercase text-lg">{track.name.replace(/\.[^/.]+$/, "")}</span>
                       <span className="opacity-0 group-hover:opacity-100 transition-opacity">PLAY</span>
                     </button>
                   ))}
