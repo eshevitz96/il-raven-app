@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   title: "IL RAVEN AUDIO",
   description: "COMMON INTELLECTUAL CREATORS PRESENTS ILL RAVEN AUDIO",
   icons: {
-    icon: '/images/cover_theme.jpg',
-    apple: '/images/cover_theme.jpg',
+    icon: '/images/raven_icon.png',
+    apple: '/images/raven_icon.png',
   },
 };
 
