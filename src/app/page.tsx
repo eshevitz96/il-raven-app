@@ -20,98 +20,199 @@ interface AudioData {
 }
 
 export default function Home() {
+  const CROSSFADE_DURATION = 4; // Seconds of overlap
+
   const [phase, setPhase] = useState<'signal' | 'archive' | 'sanctuary'>('signal');
   const [data, setData] = useState<AudioData>(audioManifest);
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
+  const [nextTrack, setNextTrack] = useState<AudioTrack | null>(null); // Pre-calculated next track
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Flatten Side A and Side B for continuous playback
-  const albumPlaylist = useMemo(() => {
-    return [...data.sideA, ...data.sideB];
-  }, [data]);
+  // Dual-Deck System
+  const [activeDeck, setActiveDeck] = useState<'A' | 'B'>('A');
+  const [isCrossfading, setIsCrossfading] = useState(false);
+  const deckARef = useRef<HTMLAudioElement | null>(null);
+  const deckBRef = useRef<HTMLAudioElement | null>(null);
 
+  // Helper: Determine next track based on sides logic
+  const getNextTrack = (track: AudioTrack | null): AudioTrack | null => {
+    if (!track) return null;
 
-  useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((error) => {
-            console.error("Playback failed:", error);
-            setIsPlaying(false);
-          });
-        }
-      } else {
-        audioRef.current.pause();
-      }
+    // Check Side A
+    const indexA = data.sideA.findIndex(t => t.path === track.path);
+    if (indexA !== -1) {
+      if (indexA < data.sideA.length - 1) return data.sideA[indexA + 1];
+      // End of Side A -> Transition to Side B
+      if (data.sideB.length > 0) return data.sideB[0];
     }
-  }, [isPlaying, currentTrack]);
 
-  const playTrack = (track: AudioTrack) => {
-    if (currentTrack?.path === track.path) {
-      setIsPlaying(!isPlaying);
-    } else {
-      setCurrentTrack(track);
-      setIsPlaying(true);
+    // Check Side B
+    const indexB = data.sideB.findIndex(t => t.path === track.path);
+    if (indexB !== -1) {
+      if (indexB < data.sideB.length - 1) return data.sideB[indexB + 1];
+      return null;
     }
+
+    // Genesis/B-Roll: No auto-transition defined
+    return null;
   };
 
-  const handleTrackEnd = () => {
-    if (!currentTrack || !data) {
-      setIsPlaying(false);
+  // Initialize Next Track when Current changes
+  useEffect(() => {
+    setNextTrack(getNextTrack(currentTrack));
+  }, [currentTrack, data]);
+
+  // Main Playback Controller
+  useEffect(() => {
+    const activeAudio = activeDeck === 'A' ? deckARef.current : deckBRef.current;
+
+    if (activeAudio) {
+      if (isPlaying) {
+        const playPromise = activeAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(e => console.error("Play failed", e));
+        }
+      } else {
+        activeAudio.pause();
+      }
+    }
+  }, [isPlaying, activeDeck, currentTrack]);
+
+  // Volume & Crossfade Orchestrator
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const updateFades = () => {
+      const activeAudio = activeDeck === 'A' ? deckARef.current : deckBRef.current;
+      const nextAudio = activeDeck === 'A' ? deckBRef.current : deckARef.current;
+
+      if (!activeAudio || !nextAudio) return;
+
+      const timeLeft = activeAudio.duration - activeAudio.currentTime;
+
+      // Start Crossfade?
+      if (isPlaying && timeLeft <= CROSSFADE_DURATION && timeLeft > 0 && nextTrack && !isCrossfading) {
+        // Init Crossfade
+        setIsCrossfading(true);
+        nextAudio.src = nextTrack.path;
+        nextAudio.volume = 0;
+        nextAudio.play().catch(e => console.error("Crossfade start failed", e));
+      }
+
+      // Execute Crossfade Ramps
+      if (isCrossfading && isPlaying) {
+        // Calculate fade progress (0 to 1)
+        // We use the remaining time of the outgoing track to determine the mix
+        const rawProgress = (CROSSFADE_DURATION - timeLeft) / CROSSFADE_DURATION;
+        const progress = Math.max(0, Math.min(1, rawProgress));
+
+        activeAudio.volume = 1 - progress;
+        nextAudio.volume = progress;
+
+        // Check if transition complete
+        if (progress >= 0.99 || activeAudio.ended) {
+          completeTransition();
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(updateFades);
+    };
+
+    const completeTransition = () => {
+      setIsCrossfading(false);
+
+      // Swap Decks
+      const prevDeck = activeDeck;
+      const newDeck = activeDeck === 'A' ? 'B' : 'A';
+      setActiveDeck(newDeck);
+
+      // Update Logical State
+      if (nextTrack) {
+        setCurrentTrack(nextTrack);
+        // Note: nextTrack will be re-calculated by the other useEffect
+      }
+
+      // Cleanup Old Deck
+      const prevAudio = prevDeck === 'A' ? deckARef.current : deckBRef.current;
+      const newAudio = newDeck === 'A' ? deckARef.current : deckBRef.current;
+
+      if (prevAudio) {
+        prevAudio.pause();
+        prevAudio.currentTime = 0;
+        prevAudio.volume = 1; // Reset for future use
+      }
+      if (newAudio) {
+        newAudio.volume = 1; // Ensure full volume
+      }
+    };
+
+    if (isPlaying) {
+      animationFrameId = requestAnimationFrame(updateFades);
+    }
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isPlaying, activeDeck, isCrossfading, nextTrack, currentTrack]);
+
+
+  const playTrack = (track: AudioTrack) => {
+    // If clicking the same track, toggle play/pause
+    if (currentTrack?.path === track.path) {
+      setIsPlaying(!isPlaying);
       return;
     }
 
-    // Check if current track is in the album playlist
-    const currentIndex = albumPlaylist.findIndex(t => t.path === currentTrack.path);
+    // Hard Reset for new track selection
+    setIsCrossfading(false);
 
-    if (currentIndex !== -1 && currentIndex < albumPlaylist.length - 1) {
-      // Play next song in album
-      setCurrentTrack(albumPlaylist[currentIndex + 1]);
-      setIsPlaying(true);
-    } else {
-      // End of playlist or track not in playlist (e.g. genesis/broll)
-      setIsPlaying(false);
+    // Stop both decks
+    if (deckARef.current) { deckARef.current.pause(); deckARef.current.currentTime = 0; deckARef.current.volume = 1; }
+    if (deckBRef.current) { deckBRef.current.pause(); deckBRef.current.currentTime = 0; deckBRef.current.volume = 1; }
+
+    // Reset to Deck A for simplicity on fresh start
+    setActiveDeck('A');
+    setCurrentTrack(track);
+
+    if (deckARef.current) {
+      deckARef.current.src = track.path;
+      // Play will be triggered by the useEffect observing [isPlaying, activeDeck]
+      // But we need to set state true
     }
+    setIsPlaying(true);
   };
 
   const handleMainPlayPause = () => {
     if (!currentTrack) {
-      // If no track selected, start Side A first track
       if (data && data.sideA.length > 0) {
-        setCurrentTrack(data.sideA[0]);
-        setIsPlaying(true);
+        playTrack(data.sideA[0]);
       }
     } else {
       setIsPlaying(!isPlaying);
+    }
+  };
+
+  // Handle manual track end (fallback if crossfade fails or track is shorter than fade)
+  const handleDeckEnd = () => {
+    if (!isCrossfading && nextTrack) {
+      // Immediate transition if no crossfade happened
+      playTrack(nextTrack);
     }
   };
 
   return (
     <main className="min-h-screen bg-background text-foreground font-bold tracking-tight overflow-hidden selection:bg-black selection:text-white">
+
+      {/* Dual Deck Audio Engine */}
       <audio
-        ref={audioRef}
-        src={currentTrack?.path}
-        onEnded={handleTrackEnd}
+        ref={deckARef}
         className="hidden"
+        onEnded={handleDeckEnd}
         preload="auto"
       />
-
-      {/* Hidden preloader for gapless transitions */}
       <audio
-        ref={(el) => {
-          if (el && currentTrack && albumPlaylist.length > 0) {
-            const currentIndex = albumPlaylist.findIndex(t => t.path === currentTrack.path);
-            if (currentIndex !== -1 && currentIndex < albumPlaylist.length - 1) {
-              el.src = albumPlaylist[currentIndex + 1].path;
-              el.load(); // Force buffer
-            }
-          }
-        }}
-        preload="auto"
+        ref={deckBRef}
         className="hidden"
-        muted
+        onEnded={handleDeckEnd}
+        preload="auto"
       />
 
       {/* Fixed Layout Elements - "The Album Cover Frame" */}
