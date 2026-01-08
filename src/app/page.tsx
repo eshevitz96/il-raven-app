@@ -462,6 +462,12 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
+
+                  <div className="pt-32 pb-8 mt-auto">
+                    <p className="text-[10px] text-[#111] hover:text-[#222] transition-colors font-bold uppercase tracking-widest">
+                      &copy; 2026 ILL RAVEN + PRHODES PROD. All Rights Reserved.
+                    </p>
+                  </div>
                 </div>
               </motion.div>
             )}
