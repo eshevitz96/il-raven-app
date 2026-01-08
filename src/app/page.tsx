@@ -327,7 +327,7 @@ export default function Home() {
                   {/* Controls Header */}
                   <div className="flex justify-between items-start mb-12 border-b border-gray-800 pb-6">
                     <div>
-                      <h2 className="text-5xl md:text-8xl font-black uppercase tracking-tighter text-white leading-[0.8] md:leading-none break-words">THIS IS MUSIC</h2>
+                      <h2 className="text-[11vw] md:text-8xl font-black uppercase tracking-tighter text-white leading-none whitespace-nowrap">THIS IS MUSIC</h2>
                     </div>
                     <button onClick={() => setShowAudio(false)} className="p-2 hover:bg-white hover:text-black rounded-full transition-colors">
                       <X size={24} />
