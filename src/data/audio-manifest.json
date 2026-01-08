@@ -1,93 +1,93 @@
 {
   "genesis": [
     {
-      "name": "CHOIR OF THE NIGHT_PRHODES.m4a",
+      "name": "Choir of the Night",
       "path": "/audio/genesis/CHOIR%20OF%20THE%20NIGHT_PRHODES.m4a"
     },
     {
-      "name": "ELECGTR_PRHODES_ROUGH.m4a",
+      "name": "Electric Guitar",
       "path": "/audio/genesis/ELECGTR_PRHODES_ROUGH.m4a"
     },
     {
-      "name": "L.I.F_PHRODES_ROUGH 1-16.m4a",
+      "name": "L.I.F.",
       "path": "/audio/genesis/L.I.F_PHRODES_ROUGH%201-16.m4a"
     },
     {
-      "name": "metalhead.m4a",
+      "name": "Metalhead",
       "path": "/audio/genesis/metalhead.m4a"
     },
     {
-      "name": "My Will To Live - rough draft.m4a",
+      "name": "My Will To Live",
       "path": "/audio/genesis/My%20Will%20To%20Live%20-%20rough%20draft.m4a"
     },
     {
-      "name": "ROLL THE DICE (bounce)_1.m4a",
+      "name": "Roll The Dice",
       "path": "/audio/genesis/ROLL%20THE%20DICE%20(bounce)_1.m4a"
     }
   ],
   "broll": [
     {
-      "name": "03.Falling (bounce 2.1).m4a",
+      "name": "Falling",
       "path": "/audio/b-roll/03.Falling%20(bounce%202.1).m4a"
     },
     {
-      "name": "Album of The Year Remix.wav",
+      "name": "Album of The Year Remix",
       "path": "/audio/b-roll/Album%20of%20The%20Year%20Remix.wav"
     },
     {
-      "name": "ALCHEMICAL BOOMBAP_PRHODES.m4a",
+      "name": "Alchemical Boombap",
       "path": "/audio/b-roll/ALCHEMICAL%20BOOMBAP_PRHODES.m4a"
     },
     {
-      "name": "Avicci 2.wav",
+      "name": "Avicci 2",
       "path": "/audio/b-roll/Avicci%202.wav"
     },
     {
-      "name": "baby yoda3 137.m4a",
+      "name": "Baby Yoda",
       "path": "/audio/b-roll/baby%20yoda3%20137.m4a"
     },
     {
-      "name": "Baloncesto.wav",
+      "name": "Baloncesto",
       "path": "/audio/b-roll/Baloncesto.wav"
     },
     {
-      "name": "BATMAN_PRHODES_ROUGH.m4a",
+      "name": "Batman",
       "path": "/audio/b-roll/BATMAN_PRHODES_ROUGH.m4a"
     },
     {
-      "name": "coffee shop b roll.m4a",
+      "name": "Coffee Shop",
       "path": "/audio/b-roll/coffee%20shop%20b%20roll.m4a"
     },
     {
-      "name": "Edge Of the World.wav",
+      "name": "Edge Of The World",
       "path": "/audio/b-roll/Edge%20Of%20the%20World.wav"
     },
     {
-      "name": "gravel.m4a",
+      "name": "Gravel",
       "path": "/audio/b-roll/gravel.m4a"
     },
     {
-      "name": "Logic Series - Trap Star.wav",
+      "name": "Trap Star",
       "path": "/audio/b-roll/Logic%20Series%20-%20Trap%20Star.wav"
     },
     {
-      "name": "Love Is A Drug.wav",
+      "name": "Love Is A Drug",
       "path": "/audio/b-roll/Love%20Is%20A%20Drug.wav"
     },
     {
-      "name": "lvlsV1.mp3",
+      "name": "Levels V1",
       "path": "/audio/b-roll/lvlsV1.mp3"
     },
     {
-      "name": "OVERLOAD_PRHODES.m4a",
+      "name": "Overload",
       "path": "/audio/b-roll/OVERLOAD_PRHODES.m4a"
     },
     {
-      "name": "seeing omens Rd prod clockwork.mp3",
+      "name": "Seeing Omens",
       "path": "/audio/b-roll/seeing%20omens%20Rd%20prod%20clockwork.mp3"
     },
     {
-      "name": "WHATS UP? .m4a",
+      "name": "What's Up?",
       "path": "/audio/b-roll/WHATS%20UP%3F%20.m4a"
     }
   ],

@@ -215,17 +215,17 @@ export default function Home() {
     }
   };
 
-  const currentTrackName = currentTrack ? currentTrack.name.replace(/\.[^/.]+$/, "") : "STANDBY MODE";
+  const currentTrackName = currentTrack ? currentTrack.name : "STANDBY MODE";
 
   return (
-    <main className="h-screen bg-black text-white font-['Helvetica'] selection:bg-[#00ff00] selection:text-black overflow-hidden flex flex-col">
+    <main className="h-screen bg-black text-white font-['Helvetica'] selection:bg-[#00ff00] selection:text-black overflow-hidden flex flex-col overscroll-none fixed inset-0">
       {/* Dual Audio Engine */}
       <audio ref={deckARef} onEnded={handleDeckEnd} className="hidden" />
       <audio ref={deckBRef} onEnded={handleDeckEnd} className="hidden" />
 
       {/* Massive Brand Banner - Cut off at top */}
       <div className="flex-none pt-0 -mt-6 md:-mt-12 px-4 border-b border-gray-800 z-10 relative bg-black">
-        <h1 className="text-[22vw] leading-[0.7] font-black tracking-tighter text-white uppercase text-center block w-full select-none overflow-hidden h-[14vw]">
+        <h1 className="text-[13vw] md:text-[22vw] leading-[0.7] font-black tracking-tighter text-white uppercase text-center block w-full select-none overflow-hidden h-auto md:h-[14vw] py-2 md:py-0">
           IL RAVEN
         </h1>
       </div>
@@ -327,7 +327,7 @@ export default function Home() {
                   {/* Controls Header */}
                   <div className="flex justify-between items-start mb-12 border-b border-gray-800 pb-6">
                     <div>
-                      <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-white leading-none whitespace-nowrap">THIS IS MUSIC</h2>
+                      <h2 className="text-5xl md:text-8xl font-black uppercase tracking-tighter text-white leading-[0.8] md:leading-none break-words">THIS IS MUSIC</h2>
                     </div>
                     <button onClick={() => setShowAudio(false)} className="p-2 hover:bg-white hover:text-black rounded-full transition-colors">
                       <X size={24} />
@@ -364,7 +364,7 @@ export default function Home() {
                                 onClick={() => playTrack(t)}
                                 className={`text-sm font-bold uppercase hover:text-[#00ff00] text-left w-full truncate ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-gray-300'}`}
                               >
-                                {t.name.split('.')[0]}
+                                {t.name}
                               </button>
                             </li>
                           ))}
@@ -379,7 +379,7 @@ export default function Home() {
                                 onClick={() => playTrack(t)}
                                 className={`text-sm font-bold uppercase hover:text-[#00ff00] text-left w-full truncate ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-gray-300'}`}
                               >
-                                {t.name.split('.')[0]}
+                                {t.name}
                               </button>
                             </li>
                           ))}
@@ -407,7 +407,7 @@ export default function Home() {
                               >
                                 <span className={`font-mono text-xs ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-gray-600'}`}>0{i + 1}</span>
                                 <span className={`text-lg md:text-xl font-bold uppercase ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-white group-hover:text-white'}`}>
-                                  {t.name.replace(/\.[^/.]+$/, "")}
+                                  {t.name}
                                 </span>
                               </button>
                             ))}
@@ -429,7 +429,7 @@ export default function Home() {
                               >
                                 <span className={`font-mono text-xs ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-gray-600'}`}>0{i + 1}</span>
                                 <span className={`text-lg md:text-xl font-bold uppercase ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-white group-hover:text-white'}`}>
-                                  {t.name.replace(/\.[^/.]+$/, "")}
+                                  {t.name}
                                 </span>
                               </button>
                             ))}
