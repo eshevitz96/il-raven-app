@@ -25,7 +25,9 @@ interface AudioData {
 }
 
 // Ensure strict layer ordering based on the directory numbering (1_background -> 9_add)
-const LAYER_ORDER = Object.keys(ravenManifest).sort();
+const LAYER_ORDER = Object.keys(ravenManifest)
+  .filter(key => !key.includes('mask') && !key.includes('add'))
+  .sort();
 
 export default function Home() {
   const [showAudio, setShowAudio] = useState(false);
