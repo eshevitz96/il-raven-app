@@ -32,6 +32,7 @@ const LAYER_ORDER = Object.keys(ravenManifest)
 export default function Home() {
   const [showAudio, setShowAudio] = useState(false);
   const [ravenLayers, setRavenLayers] = useState<Record<string, string>>({});
+  const [nextRavenLayers, setNextRavenLayers] = useState<Record<string, string>>({});
 
   // --- Analytics Helper ---
   const sendAnalyticsEvent = (eventName: string, data?: any) => {
@@ -53,31 +54,33 @@ export default function Home() {
   const deckBRef = useRef<HTMLAudioElement | null>(null);
 
   // --- Raven Logic ---
-  const generateRaven = () => {
+  const createRaven = () => {
     const newLayers: Record<string, string> = {};
     LAYER_ORDER.forEach((key) => {
       const options = ravenManifest[key];
       if (options && options.length > 0) {
-        // Force valid selection for background (assuming '1_background' is the key)
-        if (key === '1_background') {
-          const validOptions = options.filter(opt => opt && opt.trim() !== '.png');
-          if (validOptions.length > 0) {
-            newLayers[key] = validOptions[Math.floor(Math.random() * validOptions.length)];
-          }
-        } else {
-          const random = options[Math.floor(Math.random() * options.length)];
-          // Filter out placeholder files if they exist
-          if (random && random.trim() !== '.png') {
-            newLayers[key] = random;
-          }
+        // Filter valid options first to ensure we always get a valid asset if one exists
+        const validOptions = options.filter(opt => opt && opt.trim() !== '.png' && opt.trim() !== '');
+
+        if (validOptions.length > 0) {
+          newLayers[key] = validOptions[Math.floor(Math.random() * validOptions.length)];
         }
       }
     });
-    setRavenLayers(newLayers);
+    return newLayers;
+  };
+
+  const handleRavenClick = () => {
+    // Instant swap
+    setRavenLayers(nextRavenLayers);
+    // Generate next in background
+    setNextRavenLayers(createRaven());
+    sendAnalyticsEvent('raven_regenerate');
   };
 
   useEffect(() => {
-    generateRaven();
+    setRavenLayers(createRaven());
+    setNextRavenLayers(createRaven());
   }, []);
 
   // --- Sequencer Logic ---
@@ -237,7 +240,7 @@ export default function Home() {
 
         {/* LEFT: Persistent Raven Generator */}
         <div className="w-full md:w-1/2 h-1/2 md:h-full border-b md:border-b-0 md:border-r border-gray-800 relative bg-[#050505] overflow-hidden group cursor-pointer"
-          onClick={() => { generateRaven(); sendAnalyticsEvent('raven_regenerate'); }}
+          onClick={handleRavenClick}
         >
           {/* Rotated Label - Centered Vertically on Left Edge */}
           <div className="absolute top-1/2 left-0 -translate-y-1/2 -rotate-90 origin-left ml-6 z-20 pointer-events-none">
@@ -267,6 +270,24 @@ export default function Home() {
           </div>
 
           <div className="absolute inset-0 bg-white/10 opacity-0 active:opacity-100 transition-opacity pointer-events-none" />
+
+          {/* Preloader for Next Raven (Hidden) */}
+          <div className="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden">
+            {LAYER_ORDER.map((key) => {
+              const fileName = nextRavenLayers[key];
+              if (!fileName) return null;
+              return (
+                <Image
+                  key={`preload-${key}`}
+                  src={`/raven-assets/${key}/${fileName}`}
+                  alt=""
+                  width={10}
+                  height={10}
+                  priority
+                />
+              );
+            })}
+          </div>
         </div>
 
 
