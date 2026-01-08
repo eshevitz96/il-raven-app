@@ -1,0 +1,74 @@
+{
+  "1_background": [
+    " .png",
+    "ILLRAVEN_ADDS 3.png",
+    "ILLRAVEN_EYECOVERS 14.png",
+    "ILLRAVEN_EYECOVERS.png",
+    "ILLRAVEN_TOPS 15.png",
+    "ILLRAVEN_headware 10.png"
+  ],
+  "2_digital": [
+    " .png"
+  ],
+  "3_body": [
+    "ILLRAVEN_HEADS 5.png"
+  ],
+  "4_head": [
+    "ILLRAVEN_HEADS 3.png",
+    "ILLRAVEN_HEADS 4.png",
+    "ILLRAVEN_HEADS 7.png",
+    "ILLRAVEN_headware 11.png"
+  ],
+  "5_mask": [
+    "ILLRAVEN_FACES 2.png",
+    "ILLRAVEN_FACES 3.png",
+    "ILLRAVEN_FACES.png"
+  ],
+  "6_headware": [
+    "ILLRAVEN_headware 10.png",
+    "ILLRAVEN_headware 11.png",
+    "ILLRAVEN_headware 2.png",
+    "ILLRAVEN_headware 3.png",
+    "ILLRAVEN_headware 4.png",
+    "ILLRAVEN_headware 5.png",
+    "ILLRAVEN_headware 7.png",
+    "ILLRAVEN_headware 8.png",
+    "ILLRAVEN_headware 9.png",
+    "ILLRAVEN_headware.png"
+  ],
+  "7_eyecovers": [
+    "ILLRAVEN_EYECOVERS 10.png",
+    "ILLRAVEN_EYECOVERS 11.png",
+    "ILLRAVEN_EYECOVERS 12.png",
+    "ILLRAVEN_EYECOVERS 2.png",
+    "ILLRAVEN_EYECOVERS 3.png",
+    "ILLRAVEN_EYECOVERS 4.png",
+    "ILLRAVEN_EYECOVERS 6.png",
+    "ILLRAVEN_EYECOVERS 7.png",
+    "ILLRAVEN_EYECOVERS 9.png",
+    "ILLRAVEN_HEADS 2.png",
+    "ILLRAVEN_HEADS 8.png",
+    "ILLRAVEN_HEADS.png"
+  ],
+  "8_tops": [
+    "ILLRAVEN_TOPS 10.png",
+    "ILLRAVEN_TOPS 12.png",
+    "ILLRAVEN_TOPS 13.png",
+    "ILLRAVEN_TOPS 14.png",
+    "ILLRAVEN_TOPS 18.png",
+    "ILLRAVEN_TOPS 2.png",
+    "ILLRAVEN_TOPS 3.png",
+    "ILLRAVEN_TOPS 4.png",
+    "ILLRAVEN_TOPS 5.png",
+    "ILLRAVEN_TOPS 6.png",
+    "ILLRAVEN_TOPS 7.png",
+    "ILLRAVEN_TOPS 8.png",
+    "ILLRAVEN_TOPS 9.png",
+    "ILLRAVEN_TOPS.png",
+    "ILLRAVEN_headware 11.png"
+  ],
+  "9_add": [
+    "ILLRAVEN_ADDS 2.png",
+    "ILLRAVEN_ADDS.png"
+  ]
+}

@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
-  --void: #ffffff;
-  --signal: #000000;
+  --background: #000000;
+  --foreground: #ffffff;
+  --void: #000000;
+  --signal: #ffffff;
   --dim: #666666;
-  --accent: #ff0000;
+  --accent: #00ff00;
+  /* Green accent for Audio Component */
 }
 
 @theme inline {

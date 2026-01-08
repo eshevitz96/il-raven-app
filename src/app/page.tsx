@@ -1,11 +1,16 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, ArrowLeft } from 'lucide-react';
+import { Play, Pause, ArrowRight, X } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
+import localFont from 'next/font/local';
 
 import audioManifest from '../data/audio-manifest.json';
+import ravenManifestRaw from '../data/raven-manifest.json';
+
+const ravenManifest = ravenManifestRaw as Record<string, string[]>;
 
 interface AudioTrack {
   name: string;
@@ -19,395 +24,426 @@ interface AudioData {
   sideB: AudioTrack[];
 }
 
-export default function Home() {
-  const CROSSFADE_DURATION = 4; // Seconds of overlap
+// Ensure strict layer ordering based on the directory numbering (1_background -> 9_add)
+const LAYER_ORDER = Object.keys(ravenManifest).sort();
 
-  const [phase, setPhase] = useState<'signal' | 'archive' | 'sanctuary'>('signal');
-  const [data, setData] = useState<AudioData>(audioManifest);
+export default function Home() {
+  const [showAudio, setShowAudio] = useState(false);
+  const [ravenLayers, setRavenLayers] = useState<Record<string, string>>({});
+
+  // --- Analytics Helper ---
+  const sendAnalyticsEvent = (eventName: string, data?: any) => {
+    // Placeholder for real analytics (e.g., GA4, Mixpanel, Vercel Analytics)
+    console.log(`[Analytics] Event: ${eventName}`, data);
+  };
+
+  const [startTime, setStartTime] = useState<number | null>(null);
+
+  // Audio State & Dual-Deck Refs
+  const [data] = useState<AudioData>(audioManifest);
   const [currentTrack, setCurrentTrack] = useState<AudioTrack | null>(null);
-  const [nextTrack, setNextTrack] = useState<AudioTrack | null>(null); // Pre-calculated next track
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Dual-Deck System
+  // Dual-Deck System for Crossfading
   const [activeDeck, setActiveDeck] = useState<'A' | 'B'>('A');
   const [isCrossfading, setIsCrossfading] = useState(false);
   const deckARef = useRef<HTMLAudioElement | null>(null);
   const deckBRef = useRef<HTMLAudioElement | null>(null);
 
-  // Helper: Determine next track based on sides logic
+  // --- Raven Logic ---
+  const generateRaven = () => {
+    const newLayers: Record<string, string> = {};
+    LAYER_ORDER.forEach((key) => {
+      const options = ravenManifest[key];
+      if (options && options.length > 0) {
+        // Force valid selection for background (assuming '1_background' is the key)
+        if (key === '1_background') {
+          const validOptions = options.filter(opt => opt && opt.trim() !== '.png');
+          if (validOptions.length > 0) {
+            newLayers[key] = validOptions[Math.floor(Math.random() * validOptions.length)];
+          }
+        } else {
+          const random = options[Math.floor(Math.random() * options.length)];
+          // Filter out placeholder files if they exist
+          if (random && random.trim() !== '.png') {
+            newLayers[key] = random;
+          }
+        }
+      }
+    });
+    setRavenLayers(newLayers);
+  };
+
+  useEffect(() => {
+    generateRaven();
+  }, []);
+
+  // --- Sequencer Logic ---
   const getNextTrack = (track: AudioTrack | null): AudioTrack | null => {
     if (!track) return null;
 
     // Check Side A
-    const indexA = data.sideA.findIndex(t => t.path === track.path);
-    if (indexA !== -1) {
-      if (indexA < data.sideA.length - 1) return data.sideA[indexA + 1];
-      // End of Side A -> Transition to Side B
-      if (data.sideB.length > 0) return data.sideB[0];
+    const idxA = data.sideA.findIndex(t => t.path === track.path);
+    if (idxA !== -1) {
+      if (idxA < data.sideA.length - 1) return data.sideA[idxA + 1];
+      if (data.sideB.length > 0) return data.sideB[0]; // Seamless transition A -> B
     }
 
     // Check Side B
-    const indexB = data.sideB.findIndex(t => t.path === track.path);
-    if (indexB !== -1) {
-      if (indexB < data.sideB.length - 1) return data.sideB[indexB + 1];
-      return null;
+    const idxB = data.sideB.findIndex(t => t.path === track.path);
+    if (idxB !== -1) {
+      if (idxB < data.sideB.length - 1) return data.sideB[idxB + 1];
     }
 
-    // Genesis/B-Roll: No auto-transition defined
     return null;
   };
 
-  // Initialize Next Track when Current changes
+  // --- Audio Logic & Crossfading ---
+  const CROSSFADE_DURATION = 4; // 4 second overlap for seamless mix
+
   useEffect(() => {
-    setNextTrack(getNextTrack(currentTrack));
-  }, [currentTrack, data]);
+    let fadeFrame: number;
 
-  // Main Playback Controller
-  useEffect(() => {
-    const activeAudio = activeDeck === 'A' ? deckARef.current : deckBRef.current;
-
-    if (activeAudio) {
-      if (isPlaying) {
-        const playPromise = activeAudio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(e => console.error("Play failed", e));
-        }
-      } else {
-        activeAudio.pause();
-      }
-    }
-  }, [isPlaying, activeDeck, currentTrack]);
-
-  // Volume & Crossfade Orchestrator
-  useEffect(() => {
-    let animationFrameId: number;
-
-    const updateFades = () => {
+    const runCrossfade = () => {
       const activeAudio = activeDeck === 'A' ? deckARef.current : deckBRef.current;
       const nextAudio = activeDeck === 'A' ? deckBRef.current : deckARef.current;
+      const nextTrackCandidate = getNextTrack(currentTrack);
 
-      if (!activeAudio || !nextAudio) return;
+      if (!activeAudio || !nextAudio || !isPlaying) return;
 
       const timeLeft = activeAudio.duration - activeAudio.currentTime;
 
-      // Start Crossfade?
-      if (isPlaying && timeLeft <= CROSSFADE_DURATION && timeLeft > 0 && nextTrack && !isCrossfading) {
-        // Init Crossfade
+      // START CROSSFADE
+      // Trigger when near end of track AND we have a next track to play
+      if (timeLeft <= CROSSFADE_DURATION && timeLeft > 0 && !isCrossfading && nextTrackCandidate) {
+        console.log("Starting Crossfade to:", nextTrackCandidate.name);
         setIsCrossfading(true);
-        nextAudio.src = nextTrack.path;
+        nextAudio.src = nextTrackCandidate.path;
         nextAudio.volume = 0;
-        nextAudio.play().catch(e => console.error("Crossfade start failed", e));
+        nextAudio.play().catch(e => console.error("Next deck play failed", e));
       }
 
-      // Execute Crossfade Ramps
-      if (isCrossfading && isPlaying) {
-        // Calculate fade progress (0 to 1)
-        // We use the remaining time of the outgoing track to determine the mix
+      // MANAGE CROSSFADE VOLUMES
+      if (isCrossfading) {
+        // Simple linear fade
         const rawProgress = (CROSSFADE_DURATION - timeLeft) / CROSSFADE_DURATION;
         const progress = Math.max(0, Math.min(1, rawProgress));
 
         activeAudio.volume = 1 - progress;
         nextAudio.volume = progress;
 
-        // Check if transition complete
+        // COMPLETE TRANSITION
         if (progress >= 0.99 || activeAudio.ended) {
-          completeTransition();
+          setIsCrossfading(false);
+          setActiveDeck(activeDeck === 'A' ? 'B' : 'A');
+          setCurrentTrack(nextTrackCandidate);
+
+          activeAudio.pause();
+          activeAudio.currentTime = 0;
+          activeAudio.volume = 1; // Reset for next use
+          nextAudio.volume = 1;
         }
       }
 
-      animationFrameId = requestAnimationFrame(updateFades);
-    };
-
-    const completeTransition = () => {
-      setIsCrossfading(false);
-
-      // Swap Decks
-      const prevDeck = activeDeck;
-      const newDeck = activeDeck === 'A' ? 'B' : 'A';
-      setActiveDeck(newDeck);
-
-      // Update Logical State
-      if (nextTrack) {
-        setCurrentTrack(nextTrack);
-        // Note: nextTrack will be re-calculated by the other useEffect
-      }
-
-      // Cleanup Old Deck
-      const prevAudio = prevDeck === 'A' ? deckARef.current : deckBRef.current;
-      const newAudio = newDeck === 'A' ? deckARef.current : deckBRef.current;
-
-      if (prevAudio) {
-        prevAudio.pause();
-        prevAudio.currentTime = 0;
-        prevAudio.volume = 1; // Reset for future use
-      }
-      if (newAudio) {
-        newAudio.volume = 1; // Ensure full volume
-      }
+      fadeFrame = requestAnimationFrame(runCrossfade);
     };
 
     if (isPlaying) {
-      animationFrameId = requestAnimationFrame(updateFades);
+      fadeFrame = requestAnimationFrame(runCrossfade);
     }
 
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isPlaying, activeDeck, isCrossfading, nextTrack, currentTrack]);
+    return () => cancelAnimationFrame(fadeFrame);
+  }, [isPlaying, activeDeck, isCrossfading, currentTrack]);
 
+  // Main Play/Pause Toggle
+  const togglePlay = () => {
+    const deck = activeDeck === 'A' ? deckARef.current : deckBRef.current;
+    if (!deck) return;
+
+    if (isPlaying) {
+      deck.pause();
+      setIsPlaying(false);
+      // Analytics: End Session
+      const duration = (Date.now() - (startTime || Date.now())) / 1000;
+      sendAnalyticsEvent('pause', { duration });
+      setStartTime(null);
+    } else {
+      deck.play().catch(e => console.error(e));
+      setIsPlaying(true);
+      setStartTime(Date.now());
+      sendAnalyticsEvent('play', { track: currentTrack?.name });
+    }
+  };
 
   const playTrack = (track: AudioTrack) => {
-    // If clicking the same track, toggle play/pause
     if (currentTrack?.path === track.path) {
-      setIsPlaying(!isPlaying);
+      togglePlay();
       return;
     }
 
-    // Hard Reset for new track selection
+    // Reset Sequence for manual click
     setIsCrossfading(false);
+    if (deckARef.current) { deckARef.current.pause(); deckARef.current.volume = 1; }
+    if (deckBRef.current) { deckBRef.current.pause(); deckBRef.current.volume = 1; }
 
-    // Stop both decks
-    if (deckARef.current) { deckARef.current.pause(); deckARef.current.currentTime = 0; deckARef.current.volume = 1; }
-    if (deckBRef.current) { deckBRef.current.pause(); deckBRef.current.currentTime = 0; deckBRef.current.volume = 1; }
-
-    // Reset to Deck A for simplicity on fresh start
-    setActiveDeck('A');
+    // Always restart on Deck A for simplicity on manual select
+    const targetDeck = 'A';
+    setActiveDeck(targetDeck);
     setCurrentTrack(track);
+    setIsPlaying(true);
+    setStartTime(Date.now());
+    sendAnalyticsEvent('play_manual', { track: track.name });
 
     if (deckARef.current) {
       deckARef.current.src = track.path;
-      // Play will be triggered by the useEffect observing [isPlaying, activeDeck]
-      // But we need to set state true
-    }
-    setIsPlaying(true);
-  };
-
-  const handleMainPlayPause = () => {
-    if (!currentTrack) {
-      if (data && data.sideA.length > 0) {
-        playTrack(data.sideA[0]);
-      }
-    } else {
-      setIsPlaying(!isPlaying);
+      deckARef.current.currentTime = 0;
+      deckARef.current.play();
     }
   };
 
-  // Handle manual track end (fallback if crossfade fails or track is shorter than fade)
   const handleDeckEnd = () => {
-    if (!isCrossfading && nextTrack) {
-      // Immediate transition if no crossfade happened
-      playTrack(nextTrack);
+    // Fallback: If track ends naturally without triggering crossfade (e.g. short track), move to next hard
+    if (!isCrossfading) {
+      const next = getNextTrack(currentTrack);
+      if (next) {
+        playTrack(next);
+      } else {
+        setIsPlaying(false);
+        setStartTime(null);
+        sendAnalyticsEvent('album_complete');
+      }
     }
   };
+
+  const currentTrackName = currentTrack ? currentTrack.name.replace(/\.[^/.]+$/, "") : "STANDBY MODE";
 
   return (
-    <main className="min-h-screen bg-background text-foreground font-bold tracking-tight overflow-hidden selection:bg-black selection:text-white">
+    <main className="h-screen bg-black text-white font-['Helvetica'] selection:bg-[#00ff00] selection:text-black overflow-hidden flex flex-col">
+      {/* Dual Audio Engine */}
+      <audio ref={deckARef} onEnded={handleDeckEnd} className="hidden" />
+      <audio ref={deckBRef} onEnded={handleDeckEnd} className="hidden" />
 
-      {/* Dual Deck Audio Engine */}
-      <audio
-        ref={deckARef}
-        className="hidden"
-        onEnded={handleDeckEnd}
-        preload="auto"
-      />
-      <audio
-        ref={deckBRef}
-        className="hidden"
-        onEnded={handleDeckEnd}
-        preload="auto"
-      />
-
-      {/* Fixed Layout Elements - "The Album Cover Frame" */}
-      <div className="fixed top-8 left-8 md:top-12 md:left-12 z-50 mix-blend-difference text-white pointer-events-none font-['Helvetica']">
-        <h1 className="text-sm md:text-base font-black tracking-widest">COMMON INTELLECTUAL</h1>
-      </div>
-      <div className="fixed top-8 right-8 md:top-12 md:right-12 z-50 text-right mix-blend-difference text-white pointer-events-none font-['Helvetica']">
-        <h2 className="text-sm md:text-base font-black tracking-widest">CREATORS</h2>
-      </div>
-      <div className="fixed bottom-8 left-8 md:bottom-12 md:left-12 z-50 mix-blend-difference text-white pointer-events-none font-['Helvetica']">
-        <h3 className="text-sm md:text-base font-black tracking-widest">PRESENTS</h3>
-      </div>
-      <div className="fixed bottom-8 right-8 md:bottom-12 md:right-12 z-50 text-right mix-blend-difference text-white pointer-events-none font-['Helvetica']">
-        <h3 className="text-sm md:text-base font-black tracking-widest">ILL RAVEN AUDIO</h3>
+      {/* Massive Brand Banner - Cut off at top */}
+      <div className="flex-none pt-0 -mt-6 md:-mt-12 px-4 border-b border-gray-800 z-10 relative bg-black">
+        <h1 className="text-[22vw] leading-[0.7] font-black tracking-tighter text-white uppercase text-center block w-full select-none overflow-hidden h-[14vw]">
+          IL RAVEN
+        </h1>
       </div>
 
-      <AnimatePresence mode="wait">
-        {phase === 'signal' && (
-          <motion.div
-            key="signal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="h-screen w-full flex flex-col items-center justify-center relative cursor-cell"
-            onClick={() => setPhase('archive')}
-          >
-            {/* The Signal Layer: Stark White & The Bird */}
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
-              className="relative w-64 h-96 md:w-[500px] md:h-[700px] grayscale contrast-125 select-none"
-            >
-              <Image
-                src="/images/cover_theme.jpg"
-                alt="The Raven"
-                fill
-                className="object-contain mix-blend-multiply"
-                priority
-              />
-            </motion.div>
+      {/* Main Split Layout */}
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
 
-            <p className="absolute bottom-24 text-xs font-mono animate-pulse text-dim">[ CLICK TO INITIATE ]</p>
-          </motion.div>
-        )}
+        {/* LEFT: Persistent Raven Generator */}
+        <div className="w-full md:w-1/2 h-1/2 md:h-full border-b md:border-b-0 md:border-r border-gray-800 relative bg-[#050505] overflow-hidden group cursor-pointer"
+          onClick={() => { generateRaven(); sendAnalyticsEvent('raven_regenerate'); }}
+        >
+          {/* Rotated Label - Centered Vertically on Left Edge */}
+          <div className="absolute top-1/2 left-0 -translate-y-1/2 -rotate-90 origin-left ml-6 z-20 pointer-events-none">
+            <span className="text-[10px] font-bold text-white tracking-widest uppercase whitespace-nowrap">
+              Visual Frequency /// Tap to Regenerate
+            </span>
+          </div>
 
-        {phase === 'archive' && (
-          <motion.div
-            key="archive"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="min-h-screen pt-32 pb-32 px-8 md:px-32 max-w-7xl mx-auto bg-white"
-          >
-            {/* The Archive Layer: Clinical Dossier */}
-            <div className="border-b-2 border-black mb-12 pb-4 flex justify-between items-end">
-              <span className="text-4xl md:text-6xl font-black uppercase">Archive.01</span>
-              <button
-                onClick={() => setPhase('sanctuary')}
-                className="text-sm border-2 border-black px-6 py-2 hover:bg-black hover:text-white transition-all uppercase font-bold"
-              >
-                Proceed to Audio &rarr;
-              </button>
+          <div className="w-full h-full flex items-center justify-center p-4">
+            <div className="relative w-full h-full aspect-square">
+              {LAYER_ORDER.map((layerKey, index) => {
+                const fileName = ravenLayers[layerKey];
+                if (!fileName) return null;
+                return (
+                  <Image
+                    key={layerKey}
+                    src={`/raven-assets/${layerKey}/${fileName}`}
+                    alt={layerKey}
+                    fill
+                    className="object-contain"
+                    priority
+                    style={{ zIndex: index }}
+                  />
+                );
+              })}
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
-              <div>
-                <h4 className="text-xs font-mono mb-6 text-dim uppercase border-b border-gray-200 pb-2">{'/// GENESIS_LOGS'}</h4>
-                <ul className="space-y-4">
-                  {data?.genesis.map((track) => (
-                    <li key={track.path}>
-                      <button
-                        onClick={() => playTrack(track)}
-                        className="group flex items-center gap-4 w-full text-left hover:pl-2 transition-all"
-                      >
-                        <span className="w-4 h-4 rounded-full border border-black flex items-center justify-center flex-shrink-0">
-                          {currentTrack?.path === track.path && isPlaying && <div className="w-2 h-2 bg-black rounded-full animate-ping" />}
-                        </span>
-                        <span className="text-lg font-bold uppercase truncate">{track.name.split('.')[0]}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <div className="absolute inset-0 bg-white/10 opacity-0 active:opacity-100 transition-opacity pointer-events-none" />
+        </div>
 
-              <div>
-                <h4 className="text-xs font-mono mb-6 text-dim uppercase border-b border-gray-200 pb-2">{'/// EVIDENCE_B_ROLL'}</h4>
-                <ul className="space-y-4">
-                  {data?.broll.map((track) => (
-                    <li key={track.path}>
-                      <button
-                        onClick={() => playTrack(track)}
-                        className="group flex items-center gap-4 w-full text-left hover:pl-2 transition-all"
-                      >
-                        <span className="w-4 h-4 rounded-full border border-black flex items-center justify-center flex-shrink-0">
-                          {currentTrack?.path === track.path && isPlaying && <div className="w-2 h-2 bg-black rounded-full animate-ping" />}
-                        </span>
-                        <span className="text-lg font-bold uppercase truncate">{track.name.split('.')[0]}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </motion.div>
-        )}
 
-        {phase === 'sanctuary' && (
-          <motion.div
-            key="sanctuary"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="h-screen flex flex-col md:flex-row"
-          >
-            {/* The Sanctuary Layer: Vinyl / Tape Aesthetic */}
-            <div className="w-full md:w-1/2 h-1/2 md:h-full flex items-center justify-center bg-white relative px-12 pb-12 pt-32 md:p-12">
+        {/* RIGHT: Dynamic Content */}
+        <div className="w-full md:w-1/2 h-1/2 md:h-full relative bg-black flex flex-col">
+
+          <AnimatePresence mode="wait">
+            {!showAudio ? (
+              /* STATE 1: Intro / Slogan */
               <motion.div
-                className="relative w-full aspect-square max-w-lg border-4 border-black flex items-center justify-center overflow-hidden bg-white z-10"
+                key="intro"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="h-full flex flex-col"
               >
-                <Image
-                  src="/images/cover_theme.jpg"
-                  alt="Cover"
-                  fill
-                  className="object-contain opacity-20 mix-blend-multiply pointer-events-none"
-                />
+                {/* Text Section - 50% Height */}
+                <div className="flex-1 p-8 md:p-12 flex flex-col justify-center items-start bg-black border-b border-gray-800">
+                  <div className="text-4xl md:text-6xl lg:text-7xl font-black uppercase leading-[0.85] tracking-tighter text-gray-600 space-y-2 select-none origin-left">
+                    <div className="flex flex-wrap items-baseline gap-3">
+                      <span className="text-gray-500">THESE ARE</span>
+                      <span className="bg-white text-black px-2">NOT</span>
+                    </div>
+                    <span className="bg-white text-black px-2 inline-block">
+                      TOKENS.
+                    </span>
+                    <div className="pt-2 flex flex-wrap items-baseline gap-3 text-gray-500">
+                      <span>THIS IS</span>
+                      <span className="bg-white text-black px-2">MUSIC.</span>
+                    </div>
+                  </div>
+                </div>
 
-                <div className="relative z-10 text-center w-full h-full flex flex-col items-center justify-center p-6">
-                  <motion.div
-                    animate={{ rotate: isPlaying ? 360 : 0 }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                    className="w-32 h-32 md:w-56 md:h-56 rounded-full border-[8px] md:border-[12px] border-black mx-auto mb-6 flex items-center justify-center bg-white"
-                  >
-                    <div className="w-3 h-3 md:w-4 md:h-4 bg-black rounded-full" />
-                  </motion.div>
-
-                  <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter mb-4 line-clamp-3 leading-tight">
-                    {currentTrack ? currentTrack.name.replace(/\.[^/.]+$/, "") : "STANDBY"}
-                  </h2>
-                  <div className="flex justify-center gap-4 mt-2">
-                    <button onClick={handleMainPlayPause} className="hover:scale-110 transition-transform">
-                      {isPlaying ? <Pause strokeWidth={2.5} size={48} /> : <Play strokeWidth={2.5} size={48} />}
+                {/* Action Button - 50% Height */}
+                <button
+                  onClick={() => { setShowAudio(true); sendAnalyticsEvent('access_audio_click'); }}
+                  className="flex-1 bg-black text-white hover:bg-[#00ff00] hover:text-black transition-colors p-8 md:p-12 flex flex-col justify-center gap-4 group relative overflow-hidden"
+                >
+                  <div className="flex items-center justify-between w-full mt-auto mb-auto">
+                    <div className="flex items-center gap-8 md:gap-12">
+                      <span className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-none text-left">ACCESS<br />AUDIO</span>
+                      {/* FontAwesome Solid Arrow Right (Standard Icon) */}
+                      <svg viewBox="0 0 448 512" className="w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 shrink-0" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z" />
+                      </svg>
+                    </div>
+                  </div>
+                </button>
+              </motion.div>
+            ) : (
+              /* STATE 2: Audio Player */
+              <motion.div
+                key="audio"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute inset-0 bg-[#0a0a0a] text-white overflow-y-auto"
+              >
+                <div className="p-8 md:p-12 min-h-full flex flex-col">
+                  {/* Controls Header */}
+                  <div className="flex justify-between items-start mb-12 border-b border-gray-800 pb-6">
+                    <div>
+                      <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-white leading-none whitespace-nowrap">THIS IS MUSIC</h2>
+                    </div>
+                    <button onClick={() => setShowAudio(false)} className="p-2 hover:bg-white hover:text-black rounded-full transition-colors">
+                      <X size={24} />
                     </button>
+                  </div>
+
+                  {/* Now Playing Widget */}
+                  <div className="mb-12 bg-[#111] p-6 border border-gray-800 flex items-center gap-6 sticky top-0 z-10 shadow-2xl">
+                    <button
+                      onClick={togglePlay}
+                      className="w-16 h-16 bg-[#00ff00] text-black flex items-center justify-center hover:scale-105 transition-transform flex-shrink-0"
+                    >
+                      {isPlaying ? <Pause fill="black" size={32} /> : <Play fill="black" size={32} />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-bold text-[#00ff00] mb-1 uppercase tracking-widest">Running Process</div>
+                      <div className="text-xl md:text-2xl font-black truncate tracking-tight text-white">
+                        {currentTrackName}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Track Sections */}
+                  <div className="space-y-16 pb-12">
+
+                    {/* Digital Files */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                      <div>
+                        <h3 className="text-xs font-bold text-gray-500 mb-6 uppercase border-b border-gray-800 pb-2">001 /// Genesis_Logs</h3>
+                        <ul className="space-y-3">
+                          {data.genesis.map((t) => (
+                            <li key={t.path}>
+                              <button
+                                onClick={() => playTrack(t)}
+                                className={`text-sm font-bold uppercase hover:text-[#00ff00] text-left w-full truncate ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-gray-300'}`}
+                              >
+                                {t.name.split('.')[0]}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-gray-500 mb-6 uppercase border-b border-gray-800 pb-2">002 /// Evidence_B-Roll</h3>
+                        <ul className="space-y-3">
+                          {data.broll.map((t) => (
+                            <li key={t.path}>
+                              <button
+                                onClick={() => playTrack(t)}
+                                className={`text-sm font-bold uppercase hover:text-[#00ff00] text-left w-full truncate ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-gray-300'}`}
+                              >
+                                {t.name.split('.')[0]}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* The Album */}
+                    <div>
+                      <h3 className="text-4xl md:text-6xl font-black uppercase mb-8 text-white tracking-tighter">The<br />Album</h3>
+
+                      <div className="grid grid-cols-1 gap-12">
+                        {/* Side A */}
+                        <div>
+                          <div className="flex items-center gap-4 mb-6">
+                            <span className="bg-white text-black text-xs font-black px-3 py-1 uppercase tracking-wider">Side A</span>
+                            <span className="text-gray-500 text-sm font-bold uppercase tracking-widest">// The Ascension</span>
+                          </div>
+                          <div className="divide-y divide-gray-800 border-t border-gray-800">
+                            {data.sideA.map((t, i) => (
+                              <button
+                                key={t.path}
+                                onClick={() => playTrack(t)}
+                                className={`w-full text-left py-4 flex items-center gap-6 group hover:bg-[#111] transition-colors px-2 ${currentTrack?.path === t.path ? 'bg-[#111]' : ''}`}
+                              >
+                                <span className={`font-mono text-xs ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-gray-600'}`}>0{i + 1}</span>
+                                <span className={`text-lg md:text-xl font-bold uppercase ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-white group-hover:text-white'}`}>
+                                  {t.name.replace(/\.[^/.]+$/, "")}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Side B */}
+                        <div>
+                          <div className="flex items-center gap-4 mb-6">
+                            <span className="bg-white text-black text-xs font-black px-3 py-1 uppercase tracking-wider">Side B</span>
+                            <span className="text-gray-500 text-sm font-bold uppercase tracking-widest">// The Descent</span>
+                          </div>
+                          <div className="divide-y divide-gray-800 border-t border-gray-800">
+                            {data.sideB.map((t, i) => (
+                              <button
+                                key={t.path}
+                                onClick={() => playTrack(t)}
+                                className={`w-full text-left py-4 flex items-center gap-6 group hover:bg-[#111] transition-colors px-2 ${currentTrack?.path === t.path ? 'bg-[#111]' : ''}`}
+                              >
+                                <span className={`font-mono text-xs ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-gray-600'}`}>0{i + 1}</span>
+                                <span className={`text-lg md:text-xl font-bold uppercase ${currentTrack?.path === t.path ? 'text-[#00ff00]' : 'text-white group-hover:text-white'}`}>
+                                  {t.name.replace(/\.[^/.]+$/, "")}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
-            </div>
-
-            <div className="w-full md:w-1/2 h-1/2 md:h-full overflow-y-auto p-8 md:p-12 border-t-2 md:border-t-0 md:border-l-2 border-black min-h-0 bg-white">
-              <div className="flex items-center gap-4 mb-12 sticky top-0 bg-white z-20 pb-4 border-b border-black md:border-b-0 md:pb-0">
-                <button
-                  onClick={() => setPhase('archive')}
-                  className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 hover:border-black hover:bg-black hover:text-white transition-all"
-                  aria-label="Return to Archive"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-                <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight">Audio Album I <span className="text-dim text-sm block md:inline">{'// Sanctuary'}</span></h3>
-              </div>
-
-              <div className="mb-16">
-                <h3 className="text-4xl font-black mb-6 uppercase tracking-tight">Side A <span className="text-base font-normal normal-case block md:inline text-dim ml-2">{'// The Ascension'}</span></h3>
-                <div className="flex flex-col gap-0 border-b-2 border-black">
-                  {data?.sideA.map((track, i) => (
-                    <button
-                      key={track.path}
-                      onClick={() => playTrack(track)}
-                      className={`w-full text-left py-4 px-2 border-t-2 border-black flex justify-between items-center hover:bg-black hover:text-white transition-colors group ${currentTrack?.path === track.path ? 'bg-black text-white' : ''}`}
-                    >
-                      <span className="font-bold uppercase text-lg">{track.name.replace(/\.[^/.]+$/, "")}</span>
-                      <span className="opacity-0 group-hover:opacity-100 transition-opacity">PLAY</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-4xl font-black mb-6 uppercase tracking-tight">Side B <span className="text-base font-normal normal-case block md:inline text-dim ml-2">{'// The Descent'}</span></h3>
-                <div className="flex flex-col gap-0 border-b-2 border-black">
-                  {data?.sideB.map((track, i) => (
-                    <button
-                      key={track.path}
-                      onClick={() => playTrack(track)}
-                      className={`w-full text-left py-4 px-2 border-t-2 border-black flex justify-between items-center hover:bg-black hover:text-white transition-colors group ${currentTrack?.path === track.path ? 'bg-black text-white' : ''}`}
-                    >
-                      <span className="font-bold uppercase text-lg">{track.name.replace(/\.[^/.]+$/, "")}</span>
-                      <span className="opacity-0 group-hover:opacity-100 transition-opacity">PLAY</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </main>
   );
 }
-
