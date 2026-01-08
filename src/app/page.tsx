@@ -260,7 +260,8 @@ export default function Home() {
                     src={`/raven-assets/${layerKey}/${fileName}`}
                     alt={layerKey}
                     fill
-                    className="object-contain"
+                    className="object-contain pointer-events-none select-none"
+                    draggable={false}
                     priority
                     style={{ zIndex: index }}
                   />
