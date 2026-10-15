@@ -135,24 +135,20 @@
       "path": "/audio/final/side-b/3%20Blessings.mp3"
     },
     {
-      "name": "The Product of Pain",
-      "path": "/audio/final/side-b/4%20The%20Product%20of%20Pain.mp3"
-    },
-    {
       "name": "Feel Good",
-      "path": "/audio/final/side-b/5%20Feel%20Good.mp3"
+      "path": "/audio/final/side-b/4%20Feel%20Good.mp3"
     },
     {
       "name": "Free",
-      "path": "/audio/final/side-b/6%20Free.mp3"
+      "path": "/audio/final/side-b/5%20Free.mp3"
     },
     {
       "name": "Ion",
-      "path": "/audio/final/side-b/7%20Ion.mp3"
+      "path": "/audio/final/side-b/6%20Ion.mp3"
     },
     {
       "name": "Odyssey",
-      "path": "/audio/final/side-b/8%20Odyssey.mp3"
+      "path": "/audio/final/side-b/7%20Odyssey.mp3"
     }
   ]
 }
