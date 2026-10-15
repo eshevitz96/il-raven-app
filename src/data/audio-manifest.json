@@ -93,66 +93,66 @@
   ],
   "sideA": [
     {
-      "name": "Planned and Solved prod by CLCKWORK",
-      "path": "/audio/final/side-a/1%20planned%20and%20solved%20prod%20clckwork.mp3"
+      "name": "Planned and Solved",
+      "path": "/audio/final/side-a/1%20Planned%20and%20Solved.mp3"
     },
     {
       "name": "Close My Eyes",
-      "path": "/audio/final/side-a/2%20Close%20My%20Eyes%20-%20Cm%2085.wav"
+      "path": "/audio/final/side-a/2%20Close%20My%20Eyes.mp3"
     },
     {
       "name": "Kickin",
-      "path": "/audio/final/side-a/3%20kickin.wav"
+      "path": "/audio/final/side-a/3%20Kickin.mp3"
     },
     {
       "name": "Kota",
-      "path": "/audio/final/side-a/4%20Kota%20.wav"
+      "path": "/audio/final/side-a/4%20Kota.mp3"
     },
     {
       "name": "Romance",
-      "path": "/audio/final/side-a/5%20romance_rough.m4a"
+      "path": "/audio/final/side-a/5%20Romance.mp3"
     },
     {
       "name": "Midnight",
-      "path": "/audio/final/side-a/7%20MIDNIGHT.wav"
+      "path": "/audio/final/side-a/6%20Midnight.mp3"
     },
     {
       "name": "Your Love",
-      "path": "/audio/final/side-a/8%20Your%20Love.wav"
+      "path": "/audio/final/side-a/7%20Your%20Love.mp3"
     }
   ],
   "sideB": [
     {
       "name": "Bella",
-      "path": "/audio/final/side-b/1%20Bella.wav"
+      "path": "/audio/final/side-b/1%20Bella.mp3"
     },
     {
       "name": "Better Now",
-      "path": "/audio/final/side-b/2%20BETTER%20NOW_PRHODES.m4a"
+      "path": "/audio/final/side-b/2%20Better%20Now.mp3"
     },
     {
       "name": "Blessings",
-      "path": "/audio/final/side-b/3%20Blessings.wav"
+      "path": "/audio/final/side-b/3%20Blessings.mp3"
     },
     {
       "name": "The Product of Pain",
-      "path": "/audio/final/side-b/4%20The%20Product%20of%20Pain.wav"
+      "path": "/audio/final/side-b/4%20The%20Product%20of%20Pain.mp3"
     },
     {
       "name": "Feel Good",
-      "path": "/audio/final/side-b/5%20FEEL%20GOOD%20g%23min%20124.wav"
+      "path": "/audio/final/side-b/5%20Feel%20Good.mp3"
     },
     {
       "name": "Free",
-      "path": "/audio/final/side-b/6%20FREE.wav"
+      "path": "/audio/final/side-b/6%20Free.mp3"
     },
     {
       "name": "Ion",
-      "path": "/audio/final/side-b/7%20ION.wav"
+      "path": "/audio/final/side-b/7%20Ion.mp3"
     },
     {
       "name": "Odyssey",
-      "path": "/audio/final/side-b/8%20Odyessey.wav"
+      "path": "/audio/final/side-b/8%20Odyssey.mp3"
     }
   ]
 }
